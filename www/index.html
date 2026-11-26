@@ -147,6 +147,10 @@
           <input type="text" id="ivCur" maxlength="4" data-ta="cur">
         </div>
       </div>
+      <div class="sum" id="rateRow" hidden>
+        <label class="fld"><span id="rateLbl"></span><input type="number" id="rateIn" min="0" step="any" inputmode="decimal"></label>
+        <p class="hint" id="rateNote"></p>
+      </div>
       <div class="sum" id="smSet" hidden>
         <p class="hint" data-t="smokeSet"></p>
         <div class="row3" style="grid-template-columns:1fr 1fr 70px">
@@ -176,7 +180,7 @@
       <p class="hint" id="bMsg" role="status"></p>
       <button class="btn danger" id="resetBtn" data-t="reset"></button>
       <a class="link" href="privacy.html" id="privLink" data-t="privacyLink"></a>
-      <p class="hint c">v1.3.1</p>
+      <p class="hint c">v1.3.2</p>
     </div>
   </section>
 </main>

@@ -101,25 +101,36 @@ function checkRow(label, on, onToggle, onRemove) {
 
 // ---------- smoke-free savings ----------
 function money(n, cur) { const c = cur || (S.settings.smoke && S.settings.smoke.cur) || "₺"; const v = Math.round(n).toLocaleString(locale()); return /^[₺€]|TL/.test(c) || c.length > 1 ? v + " " + c : c + v; }
+// exchange rates: fetched once a day (no personal data is sent), manual override in Settings
+const CODE = { "₺": "TRY", "$": "USD", "€": "EUR", "£": "GBP" };
+function rateKey(f, to) { return (CODE[f] || f) + "_" + (CODE[to] || to); }
+function getRate(f, to) { if (f === to) return 1; S.rates = S.rates || {}; const r = S.rates[rateKey(f, to)]; if (!r || r.d !== key(today)) fetchRate(f, to); return r ? r.r : 0; }
+const pending = {};
+function fetchRate(f, to) {
+  const k = rateKey(f, to), [b, s] = k.split("_"); if (pending[k] || !CODE[f] || !CODE[to]) return; const old = S.rates[k]; if (old && old.manual) return; pending[k] = 1;
+  fetch("https://api.frankfurter.dev/v1/latest?base=" + b + "&symbols=" + s).then(r => r.json()).then(j => { const v = j && j.rates && j.rates[s]; if (v > 0) { S.rates[k] = { r: v, d: key(today) }; save(); renderInvest(); if (view === "set") renderSettings(); } }).catch(() => {}).finally(() => { delete pending[k]; });
+}
+function money2(n, c) { const v = n.toLocaleString(locale(), { maximumFractionDigits: n < 100 ? 2 : 0 }); return /^[₺€]|TL/.test(c) || c.length > 1 ? v + " " + c : c + v; }
 function renderInvest() {
   const iv = S.settings.invest, box = $("invCard"); if (!iv || !(iv.amount > 0)) { box.hidden = true; return; } box.hidden = false;
   S.invest = S.invest || {}; const m = mkey(parse(sel)); const done = S.invest[m] || 0; let total = 0; for (const k in S.invest) total += S.invest[k];
   $("ivT").textContent = t("invTitle", { m: cap(monthName(parse(m))) });
-  $("ivM").textContent = t("invOf", { a: money(done, iv.cur), b: money(iv.amount, iv.cur) });
+  $("ivM").textContent = t("invOf", { a: money2(done, iv.cur), b: money2(iv.amount, iv.cur) });
   $("ivBar").style.width = Math.min(100, done / iv.amount * 100) + "%";
-  $("ivH").textContent = (done >= iv.amount ? t("invDone") + " " : "") + t("invTotal", { t: money(total, iv.cur) }) + " " + t("invYear", { y: money(iv.amount * 12, iv.cur) });
+  $("ivH").textContent = (done >= iv.amount ? t("invDone") + " " : "") + t("invTotal", { t: money2(total, iv.cur) }) + " " + t("invYear", { y: money(iv.amount * 12, iv.cur) });
   // smoke-free money of this month that hasn't been moved into investing yet
   const sm = S.settings.smoke, sh = habits().find(x => x.kind === "smoke"); const btn = $("ivSmoke");
-  let avail = 0;
-  if (sm && sh && sm.cur === iv.cur) { let n = 0; for (const k in S.days) if (k.startsWith(m) && S.days[k].h && S.days[k].h[sh.id]) n++; S.smokeMoved = S.smokeMoved || {}; avail = n * sm.packs * sm.price - (S.smokeMoved[m] || 0); }
-  btn.hidden = !(avail > 0); if (avail > 0) { btn.textContent = t("invFromSmoke", { m: money(avail, iv.cur) }); btn.dataset.a = avail; }
+  let avail = 0, conv = 0;
+  if (sm && sh) { let n = 0; for (const k in S.days) if (k.startsWith(m) && S.days[k].h && S.days[k].h[sh.id]) n++; S.smokeMoved = S.smokeMoved || {}; avail = n * sm.packs * sm.price - (S.smokeMoved[m] || 0); conv = avail * getRate(sm.cur, iv.cur); }
+  btn.hidden = !(avail > 0 && conv > 0);
+  if (!btn.hidden) { const same = sm.cur === iv.cur; btn.textContent = t("invFromSmoke", { m: same ? money(conv, iv.cur) : money2(conv, iv.cur) + " (" + money(avail, sm.cur) + ")" }); btn.dataset.a = conv; btn.dataset.s = avail; }
 }
 function renderSmoke() {
   const sm = S.settings.smoke, h = habits().find(x => x.kind === "smoke"); const box = $("smokeCard");
   if (!sm || !h) { box.hidden = true; return; } box.hidden = false;
   const perDay = sm.packs * sm.price; let n = 0; for (const k in S.days) if (S.days[k].h && S.days[k].h[h.id]) n++;
   $("smT").textContent = t("smokeTitle", { n }); $("smM").textContent = n ? t("smokeSaved", { m: money(n * perDay) }) : t("smokeZero", { m: money(perDay) });
-  $("smH").textContent = t("smokeHint", { mo: money(perDay * 30), y: money(perDay * 365) }) + (S.settings.invest && S.settings.invest.cur === sm.cur ? " " + t("smokeToInv") : "");
+  $("smH").textContent = t("smokeHint", { mo: money(perDay * 30), y: money(perDay * 365) }) + (S.settings.invest ? " " + t("smokeToInv") : "");
 }
 
 // ---------- TODAY ----------
@@ -162,7 +173,7 @@ function renderToday() {
 function shiftDay(n) { const d = parse(sel); d.setDate(d.getDate() + n); if (d < start()) return; sel = key(d); renderToday(); }
 $("dPrev").onclick = () => shiftDay(-1); $("dNext").onclick = () => shiftDay(1); $("dToday").onclick = () => { sel = key(today); renderToday(); };
 $("invForm").onsubmit = e => { e.preventDefault(); const v = +$("ivIn").value; if (!v) return; S.invest = S.invest || {}; const m = mkey(parse(sel)); S.invest[m] = Math.max(0, (S.invest[m] || 0) + v); if (!S.invest[m]) delete S.invest[m]; $("ivIn").value = ""; save(); renderInvest(); haptic(); };
-$("ivSmoke").onclick = () => { const v = +$("ivSmoke").dataset.a || 0; if (!v) return; const m = mkey(parse(sel)); S.invest = S.invest || {}; S.smokeMoved = S.smokeMoved || {}; S.invest[m] = (S.invest[m] || 0) + v; S.smokeMoved[m] = (S.smokeMoved[m] || 0) + v; save(); renderInvest(); haptic(); toast(t("invMoved", { m: money(v, S.settings.invest.cur) })); };
+$("ivSmoke").onclick = () => { const v = +$("ivSmoke").dataset.a || 0, s = +$("ivSmoke").dataset.s || 0; if (!v) return; const m = mkey(parse(sel)); S.invest = S.invest || {}; S.smokeMoved = S.smokeMoved || {}; S.invest[m] = Math.round(((S.invest[m] || 0) + v) * 100) / 100; S.smokeMoved[m] = (S.smokeMoved[m] || 0) + s; save(); renderInvest(); haptic(); toast(t("invMoved", { m: money2(v, S.settings.invest.cur) })); };
 $("taskForm").onsubmit = e => { e.preventDefault(); const v = $("taskIn").value.trim(); if (!v) return; ensureDay(sel).tasks.push({ id: uid(), t: v, done: false }); $("taskIn").value = ""; changed(); $("taskIn").focus(); };
 let fT; ["wake", "sleep", "note"].forEach(f => $(f).addEventListener("input", () => { const k = sel; clearTimeout(fT); fT = setTimeout(() => { const x = ensureDay(k); x[f] = $(f).value; ["wake", "sleep", "note"].forEach(g => { if (!x[g]) delete x[g]; }); cleanDay(k); save(); }, 500); }));
 function changed() { save(); renderToday(); if (!$("v-cal").hidden) renderCal(); }
@@ -258,6 +269,8 @@ function renderSettings() {
     x.onclick = () => { S.settings.habits = habits().filter(y => y.id !== h.id); save(); renderSettings(); }; r.append(inp, x); box.appendChild(r); });
   $("bMsg").textContent = ""; resetArm = false; $("resetBtn").textContent = t("reset");
   const iv = S.settings.invest; $("ivSet").hidden = !iv; if (iv) { $("ivAmt").value = iv.amount; $("ivCur").value = iv.cur; }
+  const smx = S.settings.smoke, showRate = iv && smx && smx.cur !== iv.cur; $("rateRow").hidden = !showRate;
+  if (showRate) { const r = getRate(smx.cur, iv.cur); $("rateLbl").textContent = t("rateLbl", { a: smx.cur, b: iv.cur }); if (document.activeElement !== $("rateIn")) $("rateIn").value = r ? +r.toPrecision(4) : ""; const rr = S.rates[rateKey(smx.cur, iv.cur)]; $("rateNote").textContent = rr ? (rr.manual ? t("rateManual") : t("rateAuto", { d: rr.d })) : t("rateNone"); }
   const sm = S.settings.smoke; $("smSet").hidden = !sm;
   if (sm) { $("smPacks").value = sm.packs; $("smPrice").value = sm.price; $("smCur").value = sm.cur; }
   const rb = $("rEd"); rb.textContent = ""; const R = S.settings.routine || (S.settings.routine = []);
@@ -269,6 +282,7 @@ function renderSettings() {
 }
 $("routineForm").onsubmit = e => { e.preventDefault(); const v = $("rIn").value.trim(); if (!v) return; (S.settings.routine = S.settings.routine || []).push({ id: uid(), time: $("rTime").value, t: v }); $("rIn").value = ""; $("rTime").value = ""; save(); renderSettings(); };
 $("redoBtn").onclick = () => wizard(true);
+$("rateIn").addEventListener("change", () => { const iv = S.settings.invest, sm = S.settings.smoke; if (!iv || !sm) return; const v = +$("rateIn").value; S.rates = S.rates || {}; const k = rateKey(sm.cur, iv.cur); if (v > 0) S.rates[k] = { r: v, d: key(today), manual: true }; else delete S.rates[k]; save(); renderSettings(); });
 ["ivAmt", "ivCur"].forEach(id => $(id).addEventListener("change", () => { const iv = S.settings.invest; if (!iv) return; iv.amount = Math.max(0, +$("ivAmt").value || 0); iv.cur = $("ivCur").value.trim() || iv.cur; save(); }));
 ["smPacks", "smPrice", "smCur"].forEach(id => $(id).addEventListener("change", () => { const sm = S.settings.smoke; if (!sm) return; sm.packs = Math.max(0, +$("smPacks").value || 0); sm.price = Math.max(0, +$("smPrice").value || 0); sm.cur = $("smCur").value.trim() || sm.cur; save(); }));
 $("sName").addEventListener("input", () => { S.settings.name = $("sName").value.trim(); save(); });
