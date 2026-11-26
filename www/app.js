@@ -108,13 +108,18 @@ function renderInvest() {
   $("ivM").textContent = t("invOf", { a: money(done, iv.cur), b: money(iv.amount, iv.cur) });
   $("ivBar").style.width = Math.min(100, done / iv.amount * 100) + "%";
   $("ivH").textContent = (done >= iv.amount ? t("invDone") + " " : "") + t("invTotal", { t: money(total, iv.cur) }) + " " + t("invYear", { y: money(iv.amount * 12, iv.cur) });
+  // smoke-free money of this month that hasn't been moved into investing yet
+  const sm = S.settings.smoke, sh = habits().find(x => x.kind === "smoke"); const btn = $("ivSmoke");
+  let avail = 0;
+  if (sm && sh && sm.cur === iv.cur) { let n = 0; for (const k in S.days) if (k.startsWith(m) && S.days[k].h && S.days[k].h[sh.id]) n++; S.smokeMoved = S.smokeMoved || {}; avail = n * sm.packs * sm.price - (S.smokeMoved[m] || 0); }
+  btn.hidden = !(avail > 0); if (avail > 0) { btn.textContent = t("invFromSmoke", { m: money(avail, iv.cur) }); btn.dataset.a = avail; }
 }
 function renderSmoke() {
   const sm = S.settings.smoke, h = habits().find(x => x.kind === "smoke"); const box = $("smokeCard");
   if (!sm || !h) { box.hidden = true; return; } box.hidden = false;
   const perDay = sm.packs * sm.price; let n = 0; for (const k in S.days) if (S.days[k].h && S.days[k].h[h.id]) n++;
   $("smT").textContent = t("smokeTitle", { n }); $("smM").textContent = n ? t("smokeSaved", { m: money(n * perDay) }) : t("smokeZero", { m: money(perDay) });
-  $("smH").textContent = t("smokeHint", { mo: money(perDay * 30), y: money(perDay * 365) });
+  $("smH").textContent = t("smokeHint", { mo: money(perDay * 30), y: money(perDay * 365) }) + (S.settings.invest && S.settings.invest.cur === sm.cur ? " " + t("smokeToInv") : "");
 }
 
 // ---------- TODAY ----------
@@ -157,6 +162,7 @@ function renderToday() {
 function shiftDay(n) { const d = parse(sel); d.setDate(d.getDate() + n); if (d < start()) return; sel = key(d); renderToday(); }
 $("dPrev").onclick = () => shiftDay(-1); $("dNext").onclick = () => shiftDay(1); $("dToday").onclick = () => { sel = key(today); renderToday(); };
 $("invForm").onsubmit = e => { e.preventDefault(); const v = +$("ivIn").value; if (!v) return; S.invest = S.invest || {}; const m = mkey(parse(sel)); S.invest[m] = Math.max(0, (S.invest[m] || 0) + v); if (!S.invest[m]) delete S.invest[m]; $("ivIn").value = ""; save(); renderInvest(); haptic(); };
+$("ivSmoke").onclick = () => { const v = +$("ivSmoke").dataset.a || 0; if (!v) return; const m = mkey(parse(sel)); S.invest = S.invest || {}; S.smokeMoved = S.smokeMoved || {}; S.invest[m] = (S.invest[m] || 0) + v; S.smokeMoved[m] = (S.smokeMoved[m] || 0) + v; save(); renderInvest(); haptic(); toast(t("invMoved", { m: money(v, S.settings.invest.cur) })); };
 $("taskForm").onsubmit = e => { e.preventDefault(); const v = $("taskIn").value.trim(); if (!v) return; ensureDay(sel).tasks.push({ id: uid(), t: v, done: false }); $("taskIn").value = ""; changed(); $("taskIn").focus(); };
 let fT; ["wake", "sleep", "note"].forEach(f => $(f).addEventListener("input", () => { const k = sel; clearTimeout(fT); fT = setTimeout(() => { const x = ensureDay(k); x[f] = $(f).value; ["wake", "sleep", "note"].forEach(g => { if (!x[g]) delete x[g]; }); cleanDay(k); save(); }, 500); }));
 function changed() { save(); renderToday(); if (!$("v-cal").hidden) renderCal(); }

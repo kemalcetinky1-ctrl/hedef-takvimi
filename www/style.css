@@ -156,3 +156,4 @@ input[type=number]{width:100%;min-width:0;background:rgba(8,12,24,.6);border:1px
 .bigin{font-family:var(--display);font-size:1.6rem!important;text-align:center;padding:14px!important}
 .card.invest{background:linear-gradient(150deg,rgba(122,162,255,.18),rgba(255,255,255,.04));border-color:rgba(122,162,255,.45)}
 .smm.inv{color:#A9C2FF}
+.btn.smk{background:rgba(80,200,140,.16);border-color:rgba(80,200,140,.5);color:#9FF0C2}
