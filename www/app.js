@@ -286,6 +286,7 @@ addEventListener("resize", () => { if (!$("v-cal").hidden) paintRing(); });
 let gm = mkey(today);
 const MF = ["goals", "good", "bad", "learned"], YF = { ygood: "good", ybad: "bad", ylearned: "learned", ynext: "next" };
 function renderGoals() {
+  $("aiBox").hidden = true;
   const d = parse(gm), y = d.getFullYear(); const list = monthList();
   $("gTitle").textContent = cap(monthName(d)) + " " + y; $("gLabel").textContent = t("monthGoals", { m: cap(monthName(d)) });
   $("gPrev").disabled = list.indexOf(gm) <= 0; $("gNext").disabled = list.indexOf(gm) >= list.length - 1;
@@ -298,6 +299,27 @@ $("gPrev").onclick = () => shiftMonth(-1); $("gNext").onclick = () => shiftMonth
 let gT;
 MF.forEach(f => $(f).addEventListener("input", () => { const m = gm; clearTimeout(gT); gT = setTimeout(() => { const v = {}; MF.forEach(x => { const val = $(x).value; if (val) v[x] = val; }); if (Object.keys(v).length) S.months[m] = v; else delete S.months[m]; save(); $("gSaved").textContent = t("saved"); }, 500); }));
 for (const f in YF) $(f).addEventListener("input", () => { const y = parse(gm).getFullYear(); clearTimeout(gT); gT = setTimeout(() => { const v = {}; for (const x in YF) { const val = $(x).value; if (val) v[YF[x]] = val; } if (Object.keys(v).length) S.years[y] = v; else delete S.years[y]; save(); }, 500); });
+
+// ---------- AI prompt (user pastes it into their own AI app: no cost, no server) ----------
+function aiPrompt() {
+  const s = S.settings, A = s.answers || {}, QS = t("QS"), parts = t("parts"), m = mkey(today);
+  const yes = Object.keys(A.yes || {}).filter(k => QS[k]).map(k => { const q = QS[k], i = A.yes[k]; return "- " + q.q + " → " + t("yes").replace(/\s*\S+$/, "") + (q.amts && q.amts[i] ? " (" + q.amts[i] + ")" : ""); });
+  const L = [t("aiP0", { n: s.name || "-" }), "",
+    t("aiP1"), (A.goal || "").trim() || "-", "",
+    t("aiP2", { w: A.wake || "-", s: A.sleep || "-", p: (parts[A.part || 0] || "").replace(/^\S+\s/, "") }), "",
+    t("aiP3"), ...(yes.length ? yes : ["-"]), "",
+    t("aiP4"), ...habits().map(h => "- " + h.name), "",
+    t("aiP5"), ...(s.routine || []).slice().sort((a, b) => (a.time || "").localeCompare(b.time || "")).map(r => "- " + (r.time ? r.time + " " : "") + r.t), "",
+    t("aiP6"), ((S.months[m] || {}).goals || "-").trim(), "",
+    t("aiP7")];
+  if (s.invest) L.splice(L.length - 1, 0, t("aiInv", { a: money2(s.invest.amount, s.invest.cur) }), "");
+  return L.join("\n");
+}
+$("aiBtn").onclick = () => { const p = aiPrompt(); $("aiText").value = p; $("aiBox").hidden = false; const q = encodeURIComponent(p);
+  $("aiClaude").href = "https://claude.ai/new?q=" + q; $("aiGpt").href = "https://chatgpt.com/?q=" + q; copyAi(); };
+async function copyAi() { try { await navigator.clipboard.writeText($("aiText").value); toast(t("aiCopied")); } catch (e) { $("aiText").select(); } }
+$("aiCopy").onclick = copyAi;
+["aiClaude", "aiGpt", "aiGem"].forEach(id => $(id).addEventListener("click", e => { copyAi(); if (NATIVE && PL.App) { e.preventDefault(); location.href = $(id).href; } }));
 
 // ---------- SETTINGS ----------
 function langChips(host, onPick) { host.textContent = ""; LANGS.forEach(([c, n]) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.setAttribute("role", "radio"); b.textContent = n; b.setAttribute("aria-pressed", c === (S ? S.settings.lang : host.dataset.cur) ? "true" : "false"); b.setAttribute("aria-checked", b.getAttribute("aria-pressed")); b.onclick = () => onPick(c); host.appendChild(b); }); }

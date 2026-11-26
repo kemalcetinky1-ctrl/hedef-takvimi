@@ -120,6 +120,17 @@
       <label class="fld"><span class="lbl"><em>3.</em> <span data-t="learned"></span></span><textarea id="learned" rows="3"></textarea></label>
       <p class="hint" id="gSaved"></p>
     </div>
+    <div class="card ai">
+      <h2 data-t="aiTitle"></h2>
+      <p class="hint" data-t="aiHint"></p>
+      <button class="btn gold" id="aiBtn" data-t="aiBtn"></button>
+      <div id="aiBox" hidden>
+        <textarea id="aiText" rows="8" readonly></textarea>
+        <div class="row2"><a class="btn" id="aiClaude" target="_blank" rel="noopener">Claude</a><a class="btn" id="aiGpt" target="_blank" rel="noopener">ChatGPT</a></div>
+        <div class="row2"><a class="btn" id="aiGem" href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a><button class="btn" id="aiCopy" data-t="aiCopy"></button></div>
+        <p class="hint" id="aiNote" data-t="aiNote"></p>
+      </div>
+    </div>
     <div class="card">
       <h2 id="yTitle"></h2>
       <label class="fld"><span data-t="yGood"></span><textarea id="ygood" rows="3"></textarea></label>
@@ -186,7 +197,7 @@
       <p class="hint" id="bMsg" role="status"></p>
       <button class="btn danger" id="resetBtn" data-t="reset"></button>
       <a class="link" href="privacy.html" id="privLink" data-t="privacyLink"></a>
-      <p class="hint c">v1.5.2</p>
+      <p class="hint c">v1.6.0</p>
     </div>
   </section>
 </main>
