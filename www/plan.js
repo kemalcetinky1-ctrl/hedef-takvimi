@@ -22,6 +22,7 @@ const Q = {
       mind:   { q: "Meditasyon ya da günlük yazmak ister misin?", sub: "Zihnini toplamak için kısa bir mola.", amts: ["5 dk", "10 dk", "20 dk"], h: "🧘 Meditasyon / günlük ({a})", g: "Zihin: her akşam 3 satır günlük" },
       create: { q: "İçerik üretmek ister misin?", sub: "Yazı, video, çizim, müzik…", amts: ["15 dk", "30 dk", "1 saat", "2 saat"], h: "🎨 Üret ({a})", g: "Üretkenlik: haftada 2 içerik yayınla" },
       family: { q: "Sevdiklerine her gün vakit ayırmak ister misin?", sub: "Ailen, partnerin, arkadaşların.", amts: ["15 dk", "30 dk", "1 saat"], h: "❤️ Sevdiklerine vakit ({a})", g: "İlişkiler: haftada 1 kez sevdiklerinle plansız vakit" },
+      care:   { q: "Günlük kişisel bakım yapıyor musun?", sub: "Cilt bakımı, tıraş, saç… Gün sonunda kendine ayırdığın birkaç dakika.", amts: ["5 dk", "10 dk", "15 dk", "20 dk"], h: "🧴 Kişisel bakım ({a})", g: "Bakım: her akşam kendine birkaç dakika ayır" },
       water:  { q: "Günde yeterince su içiyor musun?", sub: "Evet dersen günde 2 litre suyu plana eklerim.", amts: null, h: "💧 2 litre su iç", g: null, yesLabel: "Ekle 💧", noLabel: "Gerek yok" },
       sleep:  { q: "Her gün aynı saatte yatmak ister misin?", sub: "Düzenli uyku, diğer bütün hedeflerin yakıtıdır.", amts: null, h: "😴 Yatış saati: {s}", g: "Uyku: her gün aynı saatte yat ve kalk" }
     },
@@ -49,6 +50,7 @@ const Q = {
       mind:   { q: "Would you like to meditate or journal?", sub: "A short break to clear your head.", amts: ["5 min", "10 min", "20 min"], h: "🧘 Meditate / journal ({a})", g: "Mind: 3 lines of journal every evening" },
       create: { q: "Do you want to create content?", sub: "Writing, video, drawing, music…", amts: ["15 min", "30 min", "1 hour", "2 hours"], h: "🎨 Create ({a})", g: "Creating: publish 2 pieces a week" },
       family: { q: "Do you want daily time with loved ones?", sub: "Family, partner, friends.", amts: ["15 min", "30 min", "1 hour"], h: "❤️ Time with loved ones ({a})", g: "Relationships: unplanned time with loved ones once a week" },
+      care:   { q: "Do you have a daily self-care routine?", sub: "Skincare, shaving, hair… a few minutes for yourself at the end of the day.", amts: ["5 min", "10 min", "15 min", "20 min"], h: "🧴 Self-care ({a})", g: "Self-care: a few minutes for yourself every evening" },
       water:  { q: "Do you drink enough water?", sub: "Tap Add and I'll put 2 litres a day in your plan.", amts: null, h: "💧 Drink 2 litres of water", g: null, yesLabel: "Add 💧", noLabel: "No need" },
       sleep:  { q: "Do you want to go to bed at the same time every day?", sub: "Good sleep fuels every other goal.", amts: null, h: "😴 Bedtime: {s}", g: "Sleep: same bedtime and wake time every day" }
     },
@@ -59,7 +61,7 @@ const Q = {
 };
 Object.keys(Q).forEach(l => Object.assign(I18N[l], Q[l]));
 
-const ORDER = ["read", "sport", "lang", "work", "money", "mind", "create", "family", "water", "sleep"];
+const ORDER = ["read", "sport", "lang", "work", "money", "mind", "create", "family", "water", "care", "sleep"];
 const toMin = s => { const [h, m] = (s || "0:0").split(":").map(Number); return h * 60 + m; };
 const toHM = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
 
