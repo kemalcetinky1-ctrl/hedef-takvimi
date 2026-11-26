@@ -44,6 +44,11 @@
       <div class="stat"><b id="sBest">0</b><span data-t="best"></span></div>
       <div class="stat"><b id="sMonth">–</b><span data-t="thisMonth"></span></div>
     </div>
+    <div class="card smoke" id="smokeCard" hidden>
+      <h2 id="smT"></h2>
+      <p class="smm" id="smM"></p>
+      <p class="hint" id="smH"></p>
+    </div>
     <div class="card">
       <h2 data-t="habits"></h2>
       <div class="checks" id="hChecks"></div>
@@ -127,6 +132,14 @@
       <h2 data-t="myHabits"></h2>
       <p class="hint" data-t="habitsHint"></p>
       <div class="hed" id="hed"></div>
+      <div class="sum" id="smSet" hidden>
+        <p class="hint" data-t="smokeSet"></p>
+        <div class="row3" style="grid-template-columns:1fr 1fr 70px">
+          <input type="number" id="smPacks" min="0" step="0.5" inputmode="decimal" aria-label="paket">
+          <input type="number" id="smPrice" min="0" step="any" inputmode="decimal" data-ta="packPrice">
+          <input type="text" id="smCur" maxlength="4" data-ta="cur">
+        </div>
+      </div>
       <form class="row" id="habitForm"><input type="text" id="habitIn" data-tp="newHabit" maxlength="60"><button class="btn" data-t="add"></button></form>
     </div>
     <div class="card">
@@ -148,7 +161,7 @@
       <p class="hint" id="bMsg" role="status"></p>
       <button class="btn danger" id="resetBtn" data-t="reset"></button>
       <a class="link" href="privacy.html" id="privLink" data-t="privacyLink"></a>
-      <p class="hint c">v1.1.1</p>
+      <p class="hint c">v1.2.0</p>
     </div>
   </section>
 </main>

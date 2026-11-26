@@ -150,3 +150,6 @@ input:focus,textarea:focus{outline:2px solid var(--blue);outline-offset:1px}
 .cell.s3 .b{background:linear-gradient(145deg,#FFE08A,#F5A623 60%,#E07B1F);box-shadow:0 0 0 2px #FFF1C9,0 0 26px rgba(255,200,90,.8)}.cell.s3 .b svg{width:70%;height:70%}
 .big-cell.s2 .b{box-shadow:0 0 0 3px #FFE3A3,0 18px 60px rgba(245,197,90,.55)}
 .big-cell.s3 .b{background:linear-gradient(145deg,#FFE08A,#F5A623 60%,#E07B1F);box-shadow:0 0 0 3px #FFF1C9,0 0 70px rgba(255,200,90,.8)}
+.card.smoke{background:linear-gradient(150deg,rgba(80,200,140,.16),rgba(255,255,255,.04));border-color:rgba(80,200,140,.4)}
+.smm{margin:0;font-family:var(--display);font-size:1.6rem;color:#7FE0A8;font-variant-numeric:tabular-nums}
+input[type=number]{width:100%;min-width:0;background:rgba(8,12,24,.6);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px}

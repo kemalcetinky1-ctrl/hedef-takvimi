@@ -99,6 +99,16 @@ function checkRow(label, on, onToggle, onRemove) {
   row.append(b, x); return row;
 }
 
+// ---------- smoke-free savings ----------
+function money(n) { const c = (S.settings.smoke && S.settings.smoke.cur) || "₺"; const v = Math.round(n).toLocaleString(locale()); return /^[₺€]|TL/.test(c) || c.length > 1 ? v + " " + c : c + v; }
+function renderSmoke() {
+  const sm = S.settings.smoke, h = habits().find(x => x.kind === "smoke"); const box = $("smokeCard");
+  if (!sm || !h) { box.hidden = true; return; } box.hidden = false;
+  const perDay = sm.packs * sm.price; let n = 0; for (const k in S.days) if (S.days[k].h && S.days[k].h[h.id]) n++;
+  $("smT").textContent = t("smokeTitle", { n }); $("smM").textContent = n ? t("smokeSaved", { m: money(n * perDay) }) : t("smokeZero", { m: money(perDay) });
+  $("smH").textContent = t("smokeHint", { y: money(perDay * 365) });
+}
+
 // ---------- TODAY ----------
 let sel = key(today);
 function renderToday() {
@@ -126,6 +136,7 @@ function renderToday() {
   const wasOn = $("bigCell").classList.contains("on");
   $("bigCell").classList.toggle("on", s === 2);
   $("hStat").textContent = s === 2 ? t("dayDone") : t("dayLeft", { n: total - done });
+  renderSmoke();
   const st = streaks(); $("sStreak").textContent = st.cur; $("sBest").textContent = st.best;
   const rm = runMap(); const tr = tier(rm[sel] || 0);
   $("bigCell").classList.remove("s1", "s2", "s3"); if (tr) $("bigCell").classList.add(tr);
@@ -231,6 +242,8 @@ function renderSettings() {
     const x = document.createElement("button"); x.className = "x"; x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", t("remove") + ": " + h.name); x.disabled = habits().length <= 1;
     x.onclick = () => { S.settings.habits = habits().filter(y => y.id !== h.id); save(); renderSettings(); }; r.append(inp, x); box.appendChild(r); });
   $("bMsg").textContent = ""; resetArm = false; $("resetBtn").textContent = t("reset");
+  const sm = S.settings.smoke; $("smSet").hidden = !sm;
+  if (sm) { $("smPacks").value = sm.packs; $("smPrice").value = sm.price; $("smCur").value = sm.cur; }
   const rb = $("rEd"); rb.textContent = ""; const R = S.settings.routine || (S.settings.routine = []);
   R.slice().sort((a, b) => (a.time || "").localeCompare(b.time || "")).forEach(it => { const r = document.createElement("div"); r.className = "row3";
     const tm = document.createElement("input"); tm.type = "time"; tm.value = it.time || ""; tm.setAttribute("aria-label", it.t); tm.addEventListener("change", () => { it.time = tm.value; save(); });
@@ -240,6 +253,7 @@ function renderSettings() {
 }
 $("routineForm").onsubmit = e => { e.preventDefault(); const v = $("rIn").value.trim(); if (!v) return; (S.settings.routine = S.settings.routine || []).push({ id: uid(), time: $("rTime").value, t: v }); $("rIn").value = ""; $("rTime").value = ""; save(); renderSettings(); };
 $("redoBtn").onclick = () => wizard(true);
+["smPacks", "smPrice", "smCur"].forEach(id => $(id).addEventListener("change", () => { const sm = S.settings.smoke; if (!sm) return; sm.packs = Math.max(0, +$("smPacks").value || 0); sm.price = Math.max(0, +$("smPrice").value || 0); sm.cur = $("smCur").value.trim() || sm.cur; save(); }));
 $("sName").addEventListener("input", () => { S.settings.name = $("sName").value.trim(); save(); });
 $("habitForm").onsubmit = e => { e.preventDefault(); const v = $("habitIn").value.trim(); if (!v) return; habits().push({ id: uid(), name: v }); $("habitIn").value = ""; save(); renderSettings(); };
 $("exportBtn").onclick = async () => {
@@ -273,7 +287,7 @@ function wizard(redo) {
   let lang = redo ? S.settings.lang : (navigator.language || "tr").slice(0, 2); if (!I18N[lang]) lang = "en";
   const prev = redo && S.settings.answers && S.settings.answers.yes ? S.settings.answers : null;
   const A = Object.assign({ name: redo ? S.settings.name : "", goal: "", wake: "07:00", sleep: "23:30", part: 0, yes: {}, no: {} }, prev || {});
-  A.no = A.no || {};
+  A.no = A.no || {}; if (A.price === undefined) A.price = lang === "tr" ? 120 : 10; if (!A.cur) A.cur = lang === "tr" ? "₺" : "$";
   const STEPS = ["hi", "goal", "day"].concat(PLAN.ORDER, ["sum"]);
   let si = redo ? 1 : 0, P = null;
   $("welcome").hidden = false; $("app").hidden = true; $("tabs").hidden = true;
@@ -317,10 +331,15 @@ function wizard(redo) {
       yn.append(opt(q.noLabel || t("no"), !!A.no[step], () => { delete A.yes[step]; A.no[step] = true; go(si + 1); }));
       card.append(yn);
       if (isYes && q.amts) {
-        card.append(el("p", "hint c", t("howMuch")));
-        const am = el("div", "opts two"); q.amts.forEach((x, i) => am.append(opt(x, A.yes[step] === i, () => { A.yes[step] = i; go(si + 1); }))); card.append(am);
+        card.append(el("p", "hint c", q.amtQ || t("howMuch")));
+        const am = el("div", "opts two"); q.amts.forEach((x, i) => am.append(opt(x, A.yes[step] === i, () => { A.yes[step] = i; if (step === "smoke") draw(); else go(si + 1); }))); card.append(am);
       }
-      card.append(nav(null));
+      if (step === "smoke" && isYes && A.yes.smoke >= 0) {
+        const row = el("div", "times");
+        const f1 = el("label", "fld"); f1.append(el("span", "", t("packPrice"))); const pr = el("input"); pr.type = "number"; pr.inputMode = "decimal"; pr.min = "0"; pr.step = "any"; pr.value = A.price; pr.oninput = () => A.price = pr.value; f1.append(pr);
+        const f2 = el("label", "fld"); f2.append(el("span", "", t("cur"))); const cu = el("input"); cu.type = "text"; cu.maxLength = 4; cu.value = A.cur; cu.oninput = () => A.cur = cu.value.trim() || A.cur; f2.append(cu);
+        row.append(f1, f2); card.append(row, nav(t("wzNext"), () => go(si + 1)));
+      } else card.append(nav(null));
     } else {
       if (!P) P = PLAN.build(lang, A, uid);
       card.append(el("h2", "wq", t("q6")), el("p", "hint c", t("q6h")));
@@ -334,7 +353,7 @@ function wizard(redo) {
         if (!redo) S = fresh(lang, A.name);
         S.settings.lang = lang; S.settings.name = A.name; S.settings.answers = A;
         if (habitsF.length) S.settings.habits = habitsF;
-        S.settings.routine = routineF;
+        S.settings.routine = routineF; S.settings.smoke = P.smoke;
         const m = mkey(today); if (P.goals.trim()) S.months[m] = Object.assign({}, S.months[m] || {}, { goals: P.goals });
         const td = S.days[key(today)]; if (td) td.seeded = false;
         saveNow(); close(); sel = key(today); cur = mkey(today); gm = cur; view = "today"; renderAll();
