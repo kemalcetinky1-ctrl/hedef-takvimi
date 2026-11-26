@@ -2,6 +2,8 @@
 (function () {
 "use strict";
 const KEY = "hedefTakvimi:v1";
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const PL = (window.Capacitor && window.Capacitor.Plugins) || {};
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, "0");
 const key = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
@@ -103,6 +105,40 @@ function checkRow(label, on, onToggle, onRemove) {
   row.append(b, x); return row;
 }
 
+// ---------- challenge share card ----------
+const APP_URL = "kemalcetinky1-ctrl.github.io/hedef-takvimi";
+async function makeCard() {
+  try { await Promise.all(["700 64px Caveat", "700 60px 'Space Grotesk'", "600 40px Inter", "500 34px Inter"].map(f => document.fonts.load(f))); } catch (e) {}
+  const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const g = x.createRadialGradient(W / 2, 0, 50, W / 2, 0, 1300); g.addColorStop(0, "#1B2757"); g.addColorStop(1, "#080C18"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 140; i++) { x.globalAlpha = Math.random() * .5 + .1; x.fillStyle = "#C9D6FF"; x.beginPath(); x.arc(Math.random() * W, Math.random() * H, Math.random() * 2 + .4, 0, 6.3); x.fill(); } x.globalAlpha = 1;
+  const gold = (x0, y0, w) => { const gg = x.createLinearGradient(x0, y0, x0 + w, y0 + w); gg.addColorStop(0, "#F5C55A"); gg.addColorStop(1, "#E39B2D"); return gg; };
+  const rr = (x0, y0, w, h, r) => { x.beginPath(); x.roundRect ? x.roundRect(x0, y0, w, h, r) : x.rect(x0, y0, w, h); };
+  const cross = (cx, cy, s, lw) => { x.strokeStyle = "#2B1A00"; x.lineWidth = lw; x.lineCap = "round"; x.beginPath(); x.moveTo(cx - s, cy - s); x.lineTo(cx + s, cy + s); x.moveTo(cx + s, cy - s); x.lineTo(cx - s, cy + s); x.stroke(); };
+  x.textAlign = "center"; x.fillStyle = "#93A0C4"; x.font = "600 40px Inter, sans-serif"; x.fillText(t("appName").toUpperCase(), W / 2, 170);
+  const st = streaks(); const n = st.cur;
+  x.shadowColor = "rgba(245,197,90,.5)"; x.shadowBlur = 80; rr(W / 2 - 170, 240, 340, 340, 90); x.fillStyle = gold(W / 2 - 170, 240, 340); x.fill(); x.shadowBlur = 0; cross(W / 2, 410, 70, 26);
+  x.fillStyle = "#F5C55A"; x.font = "700 220px 'Space Grotesk', sans-serif"; x.fillText(String(n), W / 2, 860);
+  x.fillStyle = "#E8ECF8"; x.font = "700 60px 'Space Grotesk', sans-serif"; x.fillText(t("cardDays"), W / 2, 950);
+  // this month grid
+  const m = mkey(today), s0 = parse(m); x.fillStyle = "#93A0C4"; x.font = "600 38px Inter, sans-serif"; x.fillText(cap(monthName(s0)) + " " + s0.getFullYear() + " · " + t("ofFull", { a: fullIn(m), b: daysIn(m, false) }), W / 2, 1060);
+  const cs = 92, gap = 12, gx = (W - (7 * cs + 6 * gap)) / 2; let gy = 1100; const off = (s0.getDay() + 6) % 7; const d = new Date(s0); let i = off;
+  while (d.getMonth() === s0.getMonth()) { const k = key(d), col = i % 7, row = Math.floor(i / 7), px = gx + col * (cs + gap), py = gy + row * (cs + gap), sv = state(k);
+    rr(px, py, cs, cs, 22); if (sv === 2) { x.fillStyle = gold(px, py, cs); x.fill(); cross(px + cs / 2, py + cs / 2, 19, 9); } else { x.fillStyle = inRange(d) ? "rgba(255,255,255,.07)" : "rgba(255,255,255,.025)"; x.fill(); x.fillStyle = sv > 0 ? "#7AA2FF" : "rgba(232,236,248,.55)"; x.font = "700 34px 'Space Grotesk', sans-serif"; x.fillText(String(d.getDate()), px + cs / 2, py + cs / 2 + 12); }
+    d.setDate(d.getDate() + 1); i++; }
+  x.fillStyle = "#F5C55A"; x.font = "700 64px Caveat, cursive"; x.fillText(t("cardDare"), W / 2, 1790);
+  x.fillStyle = "#93A0C4"; x.font = "500 34px Inter, sans-serif"; x.fillText(APP_URL, W / 2, 1862);
+  return await new Promise(r => c.toBlob(r, "image/png"));
+}
+async function shareCard() {
+  const blob = await makeCard(); const name = "hedef-takvimi-seri.png"; const text = t("cardText", { n: streaks().cur, u: "https://" + APP_URL });
+  if (NATIVE && PL.Filesystem && PL.Share) { try { const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(",")[1]); fr.readAsDataURL(blob); }); const w = await PL.Filesystem.writeFile({ path: name, data: b64, directory: "CACHE" }); await PL.Share.share({ text, url: w.uri, dialogTitle: t("dare") }); } catch (e) {} return; }
+  const file = new File([blob], name, { type: "image/png" });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  try { await navigator.clipboard.writeText(text); toast(t("cardCopied")); } catch (e) {}
+}
+
 // ---------- smoke-free savings ----------
 function money(n, cur) { const c = cur || (S.settings.smoke && S.settings.smoke.cur) || "₺"; const v = Math.round(n).toLocaleString(locale()); return /^[₺€]|TL/.test(c) || c.length > 1 ? v + " " + c : c + v; }
 // exchange rates: fetched once a day (no personal data is sent), manual override in Settings
@@ -175,6 +211,7 @@ function renderToday() {
   const m = mkey(today), dn = daysIn(m, true); $("sMonth").textContent = dn ? Math.round(fullIn(m) / dn * 100) + "%" : "–";
 }
 function shiftDay(n) { const d = parse(sel); d.setDate(d.getDate() + n); if (d < start()) return; sel = key(d); renderToday(); }
+$("dareBtn").onclick = () => { haptic(); shareCard(); };
 $("dPrev").onclick = () => shiftDay(-1); $("dNext").onclick = () => shiftDay(1); $("dToday").onclick = () => { sel = key(today); renderToday(); };
 $("invForm").onsubmit = e => { e.preventDefault(); const v = +$("ivIn").value; if (!v) return; S.invest = S.invest || {}; const m = mkey(parse(sel)); S.invest[m] = Math.max(0, (S.invest[m] || 0) + v); if (!S.invest[m]) delete S.invest[m]; $("ivIn").value = ""; save(); renderInvest(); haptic(); };
 $("ivSmoke").onclick = () => { const v = +$("ivSmoke").dataset.a || 0, s = +$("ivSmoke").dataset.s || 0; if (!v) return; const m = mkey(parse(sel)); S.invest = S.invest || {}; S.smokeMoved = S.smokeMoved || {}; S.invest[m] = Math.round(((S.invest[m] || 0) + v) * 100) / 100; S.smokeMoved[m] = (S.smokeMoved[m] || 0) + s; save(); renderInvest(); haptic(); toast(t("invMoved", { m: money2(v, S.settings.invest.cur) })); };
@@ -304,8 +341,6 @@ $("rateIn").addEventListener("change", () => { const iv = S.settings.invest, sm 
 $("sName").addEventListener("input", () => { S.settings.name = $("sName").value.trim(); save(); });
 function retire(h) { const k = key(today); if (h.since === k) S.settings.habits = S.settings.habits.filter(y => y.id !== h.id); else h.until = k; }
 $("habitForm").onsubmit = e => { e.preventDefault(); const v = $("habitIn").value.trim(); if (!v) return; S.settings.habits.push({ id: uid(), name: v, since: key(today) }); $("habitIn").value = ""; save(); renderSettings(); };
-const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-const PL = (window.Capacitor && window.Capacitor.Plugins) || {};
 $("exportBtn").onclick = async () => {
   saveNow(); const json = JSON.stringify(S, null, 1); const name = "hedef-takvimi-" + key(today) + ".json";
   if (NATIVE && PL.Filesystem && PL.Share) { try { const w = await PL.Filesystem.writeFile({ path: name, data: json, directory: "CACHE", encoding: "utf8" }); await PL.Share.share({ title: name, url: w.uri, dialogTitle: t("exportBtn") }); } catch (e) {} return; }
