@@ -44,6 +44,13 @@
       <div class="stat"><b id="sBest">0</b><span data-t="best"></span></div>
       <div class="stat"><b id="sMonth">–</b><span data-t="thisMonth"></span></div>
     </div>
+    <div class="card invest" id="invCard" hidden>
+      <h2 id="ivT"></h2>
+      <p class="smm inv" id="ivM"></p>
+      <div class="prog"><i id="ivBar"></i></div>
+      <form class="row" id="invForm"><input type="number" id="ivIn" inputmode="decimal" step="any" data-tp="invAdd" data-ta="invAdd"><button class="btn" data-t="invAddBtn"></button></form>
+      <p class="hint" id="ivH"></p>
+    </div>
     <div class="card smoke" id="smokeCard" hidden>
       <h2 id="smT"></h2>
       <p class="smm" id="smM"></p>
@@ -132,6 +139,13 @@
       <h2 data-t="myHabits"></h2>
       <p class="hint" data-t="habitsHint"></p>
       <div class="hed" id="hed"></div>
+      <div class="sum" id="ivSet" hidden>
+        <p class="hint" data-t="invSet"></p>
+        <div class="row3" style="grid-template-columns:1fr 70px">
+          <input type="number" id="ivAmt" min="0" step="any" inputmode="decimal" data-ta="invAmtQ">
+          <input type="text" id="ivCur" maxlength="4" data-ta="cur">
+        </div>
+      </div>
       <div class="sum" id="smSet" hidden>
         <p class="hint" data-t="smokeSet"></p>
         <div class="row3" style="grid-template-columns:1fr 1fr 70px">
@@ -161,7 +175,7 @@
       <p class="hint" id="bMsg" role="status"></p>
       <button class="btn danger" id="resetBtn" data-t="reset"></button>
       <a class="link" href="privacy.html" id="privLink" data-t="privacyLink"></a>
-      <p class="hint c">v1.2.1</p>
+      <p class="hint c">v1.3.0</p>
     </div>
   </section>
 </main>

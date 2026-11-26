@@ -154,3 +154,5 @@ input:focus,textarea:focus{outline:2px solid var(--blue);outline-offset:1px}
 .smm{margin:0;font-family:var(--display);font-size:1.6rem;color:#7FE0A8;font-variant-numeric:tabular-nums}
 input[type=number]{width:100%;min-width:0;background:rgba(8,12,24,.6);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px}
 .bigin{font-family:var(--display);font-size:1.6rem!important;text-align:center;padding:14px!important}
+.card.invest{background:linear-gradient(150deg,rgba(122,162,255,.18),rgba(255,255,255,.04));border-color:rgba(122,162,255,.45)}
+.smm.inv{color:#A9C2FF}

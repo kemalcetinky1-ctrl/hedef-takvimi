@@ -9,6 +9,8 @@ const Q = {
     qDay: "Günün nasıl geçiyor?", qDayWake: "Genelde kaçta kalkıp kaçta yatıyorsun?", qDayPart: "Günün hangi saatinde daha verimlisin?",
     howMuch: "Harika! Günde ne kadar ayırabilirsin?",
     packPrice: "Bir paketin fiyatı", cur: "Para birimi", priceQ: "Bir paket sigarayı kaça alıyorsun?", priceHint: "Kendi aldığın markanın fiyatını yaz. Türkiye'de paketler genelde 115–140 ₺.", perDay: "Günde {d} harcıyorsun. Bırakırsan bu para senin. 💰",
+    invWhere: "Nereye yatırım yapacaksın?", invWhereL: ["🪙 Kripto", "📊 Borsa / BIST", "💼 Fon", "🥇 Altın", "💵 Döviz", "🏦 Mevduat"], invAmtQ: "Her ay toplam ne kadar yatıracaksın?", invHint: "Örn: 20000",
+    invTitle: "📈 {m} yatırımı", invOf: "{a} / {b}", invAdd: "Yatırdığın tutarı yaz", invAddBtn: "Ekle", invTotal: "Şimdiye kadar toplam {t} yatırdın.", invYear: "Hedefine her ay ulaşırsan 1 yılda {y} yatırmış olursun.", invDone: "Bu ayın hedefi tamam! 🎉", invSet: "Yatırım: aylık hedef ve para birimi",
     smokeTitle: "🚭 Sigarasız {n} gün", smokeSaved: "{m} biriktirdin", smokeHint: "Bu parayı kenara koy ya da yatırıma ayır. Ayda {mo}, 1 yılda {y} birikir.", smokeZero: "Bugün içmezsen {m} cebinde kalır. 💪", smokeSet: "Sigara: günde kaç paket ve fiyatı",
     q6: "Planın hazır ✨", q6h: "İstemediğini sil, eksik olanı ekle. Sonra Ayarlar'dan da değiştirebilirsin.",
     startPlan: "Bu planla başla",
@@ -21,6 +23,7 @@ const Q = {
       lang:   { q: "İngilizce çalışmak ister misin?", sub: "Ya da öğrenmek istediğin başka bir dil.", amts: ["15 dk", "30 dk", "45 dk", "1 saat"], h: "🇬🇧 İngilizce çalış ({a})", g: "Dil: ay sonunda 5 dakika İngilizce konuşabil" },
       work:   { q: "İşin ya da kariyerin için her gün odaklı çalışmak ister misin?", sub: "Telefonsuz, tek işe odaklandığın bir zaman dilimi.", amts: ["30 dk", "1 saat", "2 saat", "3 saat"], h: "💼 Odaklı çalışma ({a})", g: "Kariyer: her hafta 1 somut çıktı (proje, başvuru, müşteri)" },
       money:  { q: "Harcamalarını takip etmek ister misin?", sub: "Her akşam o günün harcamalarını yazarsın.", amts: null, h: "💰 Harcamalarını yaz", g: "Para: ay sonunda harcamalarını çıkar, birikim tutarını belirle" },
+      invest: { q: "Her ay düzenli yatırım yapmak ister misin?", sub: "Kripto, borsa, fon, altın… Aylık hedefini koy, ne kadar yatırdığını takip et.", amts: null, h: null, g: "Yatırım: her ay {a} ({w})" },
       mind:   { q: "Her gün meditasyon yapmak ya da rahatlamak ister misin?", sub: "Nefes, sessizlik ya da günlük yazmak. Zihnini toplamak için kısa bir mola.", amts: ["5 dk", "10 dk", "20 dk"], h: "🧘 Meditasyon / rahatlama ({a})", g: "Zihin: her gün kendine sessiz bir an ayır" },
       pray:   { q: "Her gün namaz kılmak ister misin?", sub: "İnancın varsa, gününe manevi bir düzen katar.", amts: ["5 vakit", "Kılabildiğim kadar"], amtQ: "Hedefin hangisi?", h: "🕌 Namaz ({a})", g: "Maneviyat: namazlarını aksatmadan kıl" },
       social: { q: "Sosyal medyayı azaltmak ister misin?", sub: "Telefonda kaybolan saatleri hedeflerine geri kazan.", amts: ["30 dk", "1 saat", "2 saat"], amtQ: "Günde en fazla ne kadar bakmak istersin?", h: "📵 Sosyal medya en fazla {a}", g: "Odak: sosyal medyayı günlük sınırının altında tut" },
@@ -42,6 +45,8 @@ const Q = {
     qDay: "What does your day look like?", qDayWake: "When do you usually get up and go to bed?", qDayPart: "When are you most productive?",
     howMuch: "Great! How much time a day can you give it?",
     packPrice: "Price of one pack", cur: "Currency", priceQ: "How much do you pay for one pack?", priceHint: "Type the price of the brand you buy.", perDay: "You spend {d} a day. Quit and it's yours. 💰",
+    invWhere: "Where will you invest?", invWhereL: ["🪙 Crypto", "📊 Stocks", "💼 Funds", "🥇 Gold", "💵 Foreign currency", "🏦 Savings account"], invAmtQ: "How much will you invest in total each month?", invHint: "e.g. 500",
+    invTitle: "📈 {m} investing", invOf: "{a} / {b}", invAdd: "Amount you invested", invAddBtn: "Add", invTotal: "You've invested {t} in total so far.", invYear: "Hit your target every month and you'll invest {y} in a year.", invDone: "This month's target is done! 🎉", invSet: "Investing: monthly target and currency",
     smokeTitle: "🚭 {n} smoke-free days", smokeSaved: "You saved {m}", smokeHint: "Put this money aside or invest it. That's {mo} a month and {y} a year.", smokeZero: "Skip it today and {m} stays in your pocket. 💪", smokeSet: "Smoking: packs per day and price",
     q6: "Your plan is ready ✨", q6h: "Delete what you don't want, add what's missing. You can change it later in Settings.",
     startPlan: "Start with this plan",
@@ -54,6 +59,7 @@ const Q = {
       lang:   { q: "Do you want to learn a language?", sub: "English, Spanish, German… any language.", amts: ["15 min", "30 min", "45 min", "1 hour"], h: "🗣️ Language practice ({a})", g: "Language: speak for 5 minutes by month end" },
       work:   { q: "Do you want daily deep work for your job or career?", sub: "Phone away, one task, full focus.", amts: ["30 min", "1 hour", "2 hours", "3 hours"], h: "💼 Deep work ({a})", g: "Career: 1 concrete output every week (project, application, client)" },
       money:  { q: "Do you want to track your spending?", sub: "Each evening you write down what you spent.", amts: null, h: "💰 Log your spending", g: "Money: review spending at month end, set a savings amount" },
+      invest: { q: "Do you want to invest regularly every month?", sub: "Crypto, stocks, funds, gold… Set a monthly target and track what you put in.", amts: null, h: null, g: "Investing: {a} every month ({w})" },
       mind:   { q: "Would you like to meditate or relax every day?", sub: "Breathing, silence or journaling. A short break to clear your head.", amts: ["5 min", "10 min", "20 min"], h: "🧘 Meditate / relax ({a})", g: "Mind: a quiet moment for yourself every day" },
       pray:   { q: "Would you like to pray every day?", sub: "If you have a faith, it adds a spiritual rhythm to your day.", amts: ["Every prayer", "As often as I can"], amtQ: "What is your aim?", h: "🙏 Prayer ({a})", g: "Faith: keep your daily prayers" },
       social: { q: "Do you want to cut down on social media?", sub: "Win back the hours lost on your phone.", amts: ["30 min", "1 hour", "2 hours"], amtQ: "What's your daily limit?", h: "📵 Social media max {a}", g: "Focus: stay under your daily social media limit" },
@@ -71,7 +77,7 @@ const Q = {
 };
 Object.keys(Q).forEach(l => Object.assign(I18N[l], Q[l]));
 
-const ORDER = ["read", "sport", "lang", "work", "money", "mind", "pray", "social", "smoke", "create", "family", "water", "care", "sleep"];
+const ORDER = ["read", "sport", "lang", "work", "money", "invest", "mind", "pray", "social", "smoke", "create", "family", "water", "care", "sleep"];
 const toMin = s => { const [h, m] = (s || "0:0").split(":").map(Number); return h * 60 + m; };
 const toHM = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
 
@@ -80,7 +86,11 @@ function build(lang, a, uid) {
   const L = I18N[lang] || I18N.en; const QS = L.QS; const yes = a.yes || {};
   const habits = [], goals = [];
   if ((a.goal || "").trim()) goals.push(L.bigGoal.replace("{g}", a.goal.trim()));
-  ORDER.forEach(id => { if (!(id in yes)) return; const q = QS[id]; const amt = q.amts ? q.amts[yes[id]] || q.amts[1] || q.amts[0] : "";
+  let invest = null;
+  if ("invest" in yes && +a.invAmt > 0) { const w = (a.invWhere || []).map(i => L.invWhereL[i].replace(/^\S+\s/, "")).join(", ");
+    invest = { amount: +a.invAmt, cur: a.invCur || "₺", where: a.invWhere || [] };
+    const amtS = (+a.invAmt).toLocaleString(lang) + " " + invest.cur; goals.push("- " + QS.invest.g.replace("{a}", amtS).replace(" ({w})", w ? " (" + w + ")" : "")); }
+  ORDER.forEach(id => { if (!(id in yes) || id === "invest") return; const q = QS[id]; const amt = q.amts ? q.amts[yes[id]] || q.amts[1] || q.amts[0] : "";
     const hb = { id: uid(), name: q.h.replace("{a}", amt).replace("{s}", a.sleep || "23:00") }; if (id === "smoke") hb.kind = "smoke";
     habits.push(hb); if (q.g) goals.push("- " + q.g); });
   const smoke = ("smoke" in yes) ? { packs: [0.5, 1, 1.5, 2][yes.smoke < 0 ? 1 : yes.smoke], price: +a.price || 0, cur: a.cur || "₺" } : null;
@@ -93,7 +103,7 @@ function build(lang, a, uid) {
     { id: uid(), time: toHM(sleep - 45), t: L.R.review },
     { id: uid(), time: toHM(sleep - 20), t: L.R.sleep }
   ];
-  return { habits, goals: goals.join("\n"), routine, smoke };
+  return { habits, goals: goals.join("\n"), routine, smoke, invest };
 }
 window.PLAN = { ORDER, build };
 })();
