@@ -106,7 +106,7 @@ function renderSmoke() {
   if (!sm || !h) { box.hidden = true; return; } box.hidden = false;
   const perDay = sm.packs * sm.price; let n = 0; for (const k in S.days) if (S.days[k].h && S.days[k].h[h.id]) n++;
   $("smT").textContent = t("smokeTitle", { n }); $("smM").textContent = n ? t("smokeSaved", { m: money(n * perDay) }) : t("smokeZero", { m: money(perDay) });
-  $("smH").textContent = t("smokeHint", { y: money(perDay * 365) });
+  $("smH").textContent = t("smokeHint", { mo: money(perDay * 30), y: money(perDay * 365) });
 }
 
 // ---------- TODAY ----------
@@ -287,7 +287,7 @@ function wizard(redo) {
   let lang = redo ? S.settings.lang : (navigator.language || "tr").slice(0, 2); if (!I18N[lang]) lang = "en";
   const prev = redo && S.settings.answers && S.settings.answers.yes ? S.settings.answers : null;
   const A = Object.assign({ name: redo ? S.settings.name : "", goal: "", wake: "07:00", sleep: "23:30", part: 0, yes: {}, no: {} }, prev || {});
-  A.no = A.no || {}; if (A.price === undefined) A.price = lang === "tr" ? 120 : 10; if (!A.cur) A.cur = lang === "tr" ? "₺" : "$";
+  A.no = A.no || {}; if (A.price === undefined) A.price = ""; if (!A.cur) A.cur = lang === "tr" ? "₺" : "$";
   const STEPS = ["hi", "goal", "day"].concat(PLAN.ORDER, ["sum"]);
   let si = redo ? 1 : 0, P = null;
   $("welcome").hidden = false; $("app").hidden = true; $("tabs").hidden = true;
@@ -335,10 +335,12 @@ function wizard(redo) {
         const am = el("div", "opts two"); q.amts.forEach((x, i) => am.append(opt(x, A.yes[step] === i, () => { A.yes[step] = i; if (step === "smoke") draw(); else go(si + 1); }))); card.append(am);
       }
       if (step === "smoke" && isYes && A.yes.smoke >= 0) {
-        const row = el("div", "times");
-        const f1 = el("label", "fld"); f1.append(el("span", "", t("packPrice"))); const pr = el("input"); pr.type = "number"; pr.inputMode = "decimal"; pr.min = "0"; pr.step = "any"; pr.value = A.price; pr.oninput = () => A.price = pr.value; f1.append(pr);
-        const f2 = el("label", "fld"); f2.append(el("span", "", t("cur"))); const cu = el("input"); cu.type = "text"; cu.maxLength = 4; cu.value = A.cur; cu.oninput = () => A.cur = cu.value.trim() || A.cur; f2.append(cu);
-        row.append(f1, f2); card.append(row, nav(t("wzNext"), () => go(si + 1)));
+        card.append(el("p", "hint c", t("priceQ")));
+        const cs = el("div", "langs"); ["₺", "$", "€", "£"].forEach(c => { const b = el("button", "chip", c); b.type = "button"; b.setAttribute("aria-pressed", A.cur === c ? "true" : "false"); b.onclick = () => { A.cur = c; if (!A.priceTyped) A.price = ""; draw(); }; cs.append(b); }); card.append(cs);
+        const pr = el("input"); pr.type = "number"; pr.inputMode = "decimal"; pr.min = "0"; pr.step = "any"; pr.className = "bigin"; pr.placeholder = A.cur === "₺" ? "125" : "10"; pr.value = A.price; pr.setAttribute("aria-label", t("packPrice"));
+        const per = el("p", "hint c"); const upd = () => { const v = +A.price || 0; per.textContent = v ? t("perDay", { d: (Math.round(v * [0.5, 1, 1.5, 2][A.yes.smoke] * 100) / 100).toLocaleString(lang) + " " + A.cur }) : t("priceHint"); };
+        pr.oninput = () => { A.price = pr.value; A.priceTyped = true; upd(); }; upd();
+        card.append(pr, per, nav(t("wzNext"), () => { if (!(+A.price > 0)) { pr.focus(); per.textContent = t("priceHint"); return; } go(si + 1); }));
       } else card.append(nav(null));
     } else {
       if (!P) P = PLAN.build(lang, A, uid);
