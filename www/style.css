@@ -159,3 +159,4 @@ input[type=number]{width:100%;min-width:0;background:rgba(8,12,24,.6);border:1px
 .btn.smk{background:rgba(80,200,140,.16);border-color:rgba(80,200,140,.5);color:#9FF0C2}
 .ck[role=switch][aria-checked="true"] .bx{background:var(--gold);border-color:var(--gold)}.ck[role=switch][aria-checked="true"] .bx::after{content:"✓";color:var(--ink);font-weight:800}
 .ck[role=switch][aria-checked="true"] span:last-child{text-decoration:none;color:var(--fg)}
+.logo svg{width:56%;height:56%}.logo path{stroke:var(--ink);stroke-width:5.5;stroke-linecap:round;fill:none}

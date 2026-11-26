@@ -393,7 +393,7 @@ function wizard(redo) {
     applyLang(lang); card.textContent = ""; const step = STEPS[si];
     if (si > 0) { card.append(el("div", "wstep", t("wzStep", { a: si, b: STEPS.length - 1 }))); const bar = el("div", "wbar"); const i = el("i"); i.style.width = (si / (STEPS.length - 1) * 100) + "%"; bar.append(i); card.append(bar); }
     if (step === "hi") {
-      const lg = el("div", "logo", "✗"); lg.setAttribute("aria-hidden", "true"); card.append(lg, el("h1", "", t("welcomeTitle")), el("p", "", t("welcomeText")));
+      const lg = el("div", "logo"); lg.innerHTML = XP; lg.setAttribute("aria-hidden", "true"); card.append(lg, el("h1", "", t("welcomeTitle")), el("p", "", t("welcomeText")));
       const ls = el("div", "langs"); ls.dataset.cur = lang; langChips(ls, c => { lang = c; draw(); }); card.append(ls);
       const f = el("label", "fld"); f.append(el("span", "", t("name"))); const inp = el("input"); inp.type = "text"; inp.value = A.name; inp.autocomplete = "given-name"; inp.oninput = () => A.name = inp.value.trim(); f.append(inp); card.append(f);
       card.append(nav(t("start"), () => go(1)));
