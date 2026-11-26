@@ -399,9 +399,9 @@ function wizard(redo) {
       card.append(nav(t("start"), () => go(1)));
     } else if (step === "goal") {
       card.append(el("h2", "wq", t("qGoal")), el("p", "hint c", t("qGoalH")));
-      const ta = el("textarea"); ta.rows = 3; ta.id = "wGoal"; ta.placeholder = t("qGoalPh"); ta.value = A.goal; ta.maxLength = 160; card.append(ta);
+      const ta = el("textarea"); ta.rows = 5; ta.id = "wGoal"; ta.className = "grow"; ta.placeholder = t("qGoalPh"); ta.value = A.goal; ta.maxLength = 5000; card.append(ta); const fit = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight + 2, innerHeight * 0.5) + "px"; }; setTimeout(fit, 0);
       card.append(nav(A.goal.trim() ? t("wzNext") : t("wzSkip"), () => go(si + 1)));
-      ta.oninput = () => { A.goal = ta.value; card.querySelector(".wnav .gold").textContent = ta.value.trim() ? t("wzNext") : t("wzSkip"); };
+      ta.oninput = () => { A.goal = ta.value; fit(); card.querySelector(".wnav .gold").textContent = ta.value.trim() ? t("wzNext") : t("wzSkip"); };
     } else if (step === "day") {
       card.append(el("h2", "wq", t("qDay")), el("p", "hint c", t("qDayWake")));
       const tm = el("div", "times");

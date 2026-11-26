@@ -5,7 +5,7 @@ const Q = {
   tr: {
     wzNext: "Devam", wzBack: "Geri", wzSkip: "Atla", yes: "Evet 👍", no: "Hayır",
     wzStep: "{a} / {b}",
-    qGoal: "Bu yıl ulaşmak istediğin en büyük hedef ne?", qGoalH: "Tek cümle yeter. Örn: 1 milyon TL kazanmak, 10 kilo vermek, akıcı İngilizce.", qGoalPh: "Büyük hedefim…",
+    qGoal: "Bu yıl ulaşmak istediğin en büyük hedef ne?", qGoalH: "İstediğin kadar uzun yaz: hedeflerin, bu yıl ne yapmak istediğin, aklından geçenler… Planını buna göre hazırlayacağız.", qGoalPh: "Büyük hedefim…",
     qDay: "Günün nasıl geçiyor?", qDayWake: "Genelde kaçta kalkıp kaçta yatıyorsun?", qDayPart: "Günün hangi saatinde daha verimlisin?",
     howMuch: "Harika! Günde ne kadar ayırabilirsin?",
     packPrice: "Bir paketin fiyatı", cur: "Para birimi", priceQ: "Bir paket sigarayı kaça alıyorsun?", priceHint: "Kendi aldığın markanın fiyatını yaz. Türkiye'de paketler genelde 115–140 ₺.", perDay: "Günde {d} harcıyorsun. Bırakırsan bu para senin. 💰",
@@ -41,7 +41,7 @@ const Q = {
   en: {
     wzNext: "Next", wzBack: "Back", wzSkip: "Skip", yes: "Yes 👍", no: "No",
     wzStep: "{a} / {b}",
-    qGoal: "What's the biggest goal you want to reach this year?", qGoalH: "One sentence is enough. E.g. save $10k, lose 10 kg, speak fluent English.", qGoalPh: "My big goal…",
+    qGoal: "What's the biggest goal you want to reach this year?", qGoalH: "Write as much as you like: your goals, what you want to do this year, half-formed ideas… Your plan is built from this.", qGoalPh: "My big goal…",
     qDay: "What does your day look like?", qDayWake: "When do you usually get up and go to bed?", qDayPart: "When are you most productive?",
     howMuch: "Great! How much time a day can you give it?",
     packPrice: "Price of one pack", cur: "Currency", priceQ: "How much do you pay for one pack?", priceHint: "Type the price of the brand you buy.", perDay: "You spend {d} a day. Quit and it's yours. 💰",
@@ -78,6 +78,8 @@ const Q = {
 Object.keys(Q).forEach(l => Object.assign(I18N[l], Q[l]));
 
 const ORDER = ["read", "sport", "lang", "work", "money", "invest", "mind", "pray", "social", "smoke", "create", "family", "water", "care", "sleep"];
+// first sentence / line of a long goal, max ~60 chars, for the routine line
+const short = g => { g = (g || "").trim().split(/\n|(?<=[.!?])\s/)[0].trim(); return g.length > 60 ? g.slice(0, 57).replace(/\s+\S*$/, "") + "…" : g; };
 const toMin = s => { const [h, m] = (s || "0:0").split(":").map(Number); return h * 60 + m; };
 const toHM = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
 
@@ -99,7 +101,7 @@ function build(lang, a, uid) {
   const focusLen = "work" in yes ? " (" + QS.work.amts[yes.work] + ")" : "";
   const routine = [
     { id: uid(), time: toHM(wake), t: L.R.wake },
-    { id: uid(), time: toHM(focusAt), t: L.R.focus.replace("{g}", (a.goal || "").trim() || L.focusDefault) + focusLen },
+    { id: uid(), time: toHM(focusAt), t: L.R.focus.replace("{g}", short(a.goal) || L.focusDefault) + focusLen },
     { id: uid(), time: toHM(sleep - 45), t: L.R.review },
     { id: uid(), time: toHM(sleep - 20), t: L.R.sleep }
   ];
