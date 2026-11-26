@@ -46,7 +46,11 @@ const monthName = (d, long = true) => d.toLocaleDateString(locale(), { month: lo
 const cap = s => s.charAt(0).toLocaleUpperCase(locale()) + s.slice(1);
 
 // ---------- day logic ----------
-const habits = () => S.settings.habits;
+// habits keep a history: "since" = first day they count, "until" = first day they no longer count.
+// Adding/removing a habit therefore never breaks past days or streaks.
+const habitsOn = k => S.settings.habits.filter(h => (!h.since || h.since <= k) && (!h.until || k < h.until));
+const habits = () => habitsOn(key(today));
+const smokeIds = () => new Set(S.settings.habits.filter(h => h.kind === "smoke").map(h => h.id));
 const start = () => parse(S.settings.start);
 function day(k) { return S.days[k] || null; }
 function ensureDay(k) { if (!S.days[k]) S.days[k] = { h: {}, tasks: [] }; const d = S.days[k]; d.h = d.h || {}; d.tasks = d.tasks || []; return d; }
@@ -67,7 +71,7 @@ const MILES = [3, 7, 21, 30, 66, 100, 180, 365];
 // 0 = nothing, 0..1 partial, 2 = complete
 function state(k) {
   const d = day(k); if (!d) return 0;
-  const hs = habits(); const tasks = d.tasks || [];
+  const hs = habitsOn(k); const tasks = d.tasks || [];
   const total = hs.length + tasks.length; if (!total) return 0;
   const done = hs.filter(h => d.h && d.h[h.id]).length + tasks.filter(x => x.done).length;
   if (!done) return 0; return done >= total ? 2 : done / total;
@@ -121,14 +125,14 @@ function renderInvest() {
   // smoke-free money of this month that hasn't been moved into investing yet
   const sm = S.settings.smoke, sh = habits().find(x => x.kind === "smoke"); const btn = $("ivSmoke");
   let avail = 0, conv = 0;
-  if (sm && sh) { let n = 0; for (const k in S.days) if (k.startsWith(m) && S.days[k].h && S.days[k].h[sh.id]) n++; S.smokeMoved = S.smokeMoved || {}; avail = n * sm.packs * sm.price - (S.smokeMoved[m] || 0); conv = avail * getRate(sm.cur, iv.cur); }
+  if (sm && sh) { const ids = smokeIds(); let n = 0; for (const k in S.days) { const dh = S.days[k].h || {}; if (k.startsWith(m) && [...ids].some(i => dh[i])) n++; } S.smokeMoved = S.smokeMoved || {}; avail = n * sm.packs * sm.price - (S.smokeMoved[m] || 0); conv = avail * getRate(sm.cur, iv.cur); }
   btn.hidden = !(avail > 0 && conv > 0);
   if (!btn.hidden) { const same = sm.cur === iv.cur; btn.textContent = t("invFromSmoke", { m: same ? money(conv, iv.cur) : money2(conv, iv.cur) + " (" + money(avail, sm.cur) + ")" }); btn.dataset.a = conv; btn.dataset.s = avail; }
 }
 function renderSmoke() {
-  const sm = S.settings.smoke, h = habits().find(x => x.kind === "smoke"); const box = $("smokeCard");
+  const sm = S.settings.smoke, h = habits().find(x => x.kind === "smoke"), ids = smokeIds(); const box = $("smokeCard");
   if (!sm || !h) { box.hidden = true; return; } box.hidden = false;
-  const perDay = sm.packs * sm.price; let n = 0; for (const k in S.days) if (S.days[k].h && S.days[k].h[h.id]) n++;
+  const perDay = sm.packs * sm.price; let n = 0; for (const k in S.days) { const dh = S.days[k].h || {}; if ([...ids].some(i => dh[i])) n++; }
   $("smT").textContent = t("smokeTitle", { n }); $("smM").textContent = n ? t("smokeSaved", { m: money(n * perDay) }) : t("smokeZero", { m: money(perDay) });
   $("smH").textContent = t("smokeHint", { mo: money(perDay * 30), y: money(perDay * 365) }) + (S.settings.invest ? " " + t("smokeToInv") : "");
 }
@@ -145,7 +149,7 @@ function renderToday() {
   const v = day(sel) || {};
   // habits
   const hc = $("hChecks"); hc.textContent = "";
-  habits().forEach(h => hc.appendChild(checkRow(h.name, v.h && v.h[h.id], () => { const x = ensureDay(sel); if (x.h[h.id]) delete x.h[h.id]; else x.h[h.id] = true; cleanDay(sel); changed(); })));
+  habitsOn(sel).forEach(h => hc.appendChild(checkRow(h.name, v.h && v.h[h.id], () => { const x = ensureDay(sel); if (x.h[h.id]) delete x.h[h.id]; else x.h[h.id] = true; cleanDay(sel); changed(); })));
   // tasks
   const tc = $("tChecks"); tc.textContent = "";
   (v.tasks || []).forEach(task => tc.appendChild(checkRow((task.time ? task.time + " · " : "") + task.t, task.done, () => { task.done = !task.done; changed(); }, () => { const x = ensureDay(sel); x.tasks = x.tasks.filter(y => y.id !== task.id); cleanDay(sel); changed(); })));
@@ -224,7 +228,8 @@ function renderMonth() {
 $("days").addEventListener("click", e => { const b = e.target.closest(".cell[data-k]"); if (b && !b.disabled) { sel = b.dataset.k; show("today"); } });
 function renderBars() {
   const box = $("hbars"); box.textContent = ""; const el = daysIn(cur, false);
-  habits().forEach(h => { let n = 0; for (const k in S.days) if (k.startsWith(cur) && S.days[k].h && S.days[k].h[h.id]) n++;
+  const mEnd = key(new Date(parse(cur).getFullYear(), parse(cur).getMonth() + 1, 0));
+  S.settings.habits.filter(h => (!h.since || h.since <= mEnd) && (!h.until || h.until > cur + "-01")).forEach(h => { let n = 0; for (const k in S.days) if (k.startsWith(cur) && S.days[k].h && S.days[k].h[h.id]) n++;
     const r = document.createElement("div"); r.className = "hrow"; const a = document.createElement("span"); a.textContent = h.name; const bar = document.createElement("span"); bar.className = "bar"; const i = document.createElement("i"); i.style.width = (el ? Math.min(100, n / el * 100) : 0) + "%"; bar.appendChild(i); const b = document.createElement("b"); b.textContent = t("habitsCount", { a: n, b: el }); r.append(a, bar, b); box.appendChild(r); });
 }
 function renderHeat() {
@@ -266,7 +271,8 @@ function renderSettings() {
   habits().forEach(h => { const r = document.createElement("div"); r.className = "row"; const inp = document.createElement("input"); inp.type = "text"; inp.value = h.name; inp.maxLength = 60; inp.setAttribute("aria-label", h.name);
     inp.addEventListener("change", () => { h.name = inp.value.trim() || h.name; save(); renderSettings(); });
     const x = document.createElement("button"); x.className = "x"; x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", t("remove") + ": " + h.name); x.disabled = habits().length <= 1;
-    x.onclick = () => { S.settings.habits = habits().filter(y => y.id !== h.id); save(); renderSettings(); }; r.append(inp, x); box.appendChild(r); });
+    x.onclick = () => { retire(h); save(); renderSettings(); }; r.append(inp, x); box.appendChild(r); });
+  $("remCard").hidden = !(NATIVE && PL.LocalNotifications); const rm = S.settings.remind || {}; $("remOn").setAttribute("aria-checked", rm.on ? "true" : "false"); $("remTime").value = rm.time || "21:00"; $("remTime").disabled = !rm.on;
   $("bMsg").textContent = ""; resetArm = false; $("resetBtn").textContent = t("reset");
   const iv = S.settings.invest; $("ivSet").hidden = !iv; if (iv) { $("ivAmt").value = iv.amount; $("ivCur").value = iv.cur; }
   const smx = S.settings.smoke, showRate = iv && smx && smx.cur !== iv.cur; $("rateRow").hidden = !showRate;
@@ -282,13 +288,27 @@ function renderSettings() {
 }
 $("routineForm").onsubmit = e => { e.preventDefault(); const v = $("rIn").value.trim(); if (!v) return; (S.settings.routine = S.settings.routine || []).push({ id: uid(), time: $("rTime").value, t: v }); $("rIn").value = ""; $("rTime").value = ""; save(); renderSettings(); };
 $("redoBtn").onclick = () => wizard(true);
+async function schedule() {
+  const LN = PL.LocalNotifications; if (!LN) return; const rm = S.settings.remind || {};
+  try { await LN.cancel({ notifications: [{ id: 1 }] }); } catch (e) {}
+  if (!rm.on) return;
+  const p = await LN.requestPermissions(); if (p.display !== "granted") { rm.on = false; save(); renderSettings(); toast(t("remDenied")); return; }
+  const [hh, mm] = (rm.time || "21:00").split(":").map(Number);
+  await LN.schedule({ notifications: [{ id: 1, title: t("notifTitle"), body: t("notifBody"), schedule: { on: { hour: hh, minute: mm }, allowWhileIdle: true } }] });
+}
+$("remOn").onclick = () => { const rm = S.settings.remind = S.settings.remind || { time: "21:00" }; rm.on = !rm.on; save(); renderSettings(); schedule(); };
+$("remTime").addEventListener("change", () => { const rm = S.settings.remind = S.settings.remind || {}; rm.time = $("remTime").value || "21:00"; save(); schedule(); });
 $("rateIn").addEventListener("change", () => { const iv = S.settings.invest, sm = S.settings.smoke; if (!iv || !sm) return; const v = +$("rateIn").value; S.rates = S.rates || {}; const k = rateKey(sm.cur, iv.cur); if (v > 0) S.rates[k] = { r: v, d: key(today), manual: true }; else delete S.rates[k]; save(); renderSettings(); });
 ["ivAmt", "ivCur"].forEach(id => $(id).addEventListener("change", () => { const iv = S.settings.invest; if (!iv) return; iv.amount = Math.max(0, +$("ivAmt").value || 0); iv.cur = $("ivCur").value.trim() || iv.cur; save(); }));
 ["smPacks", "smPrice", "smCur"].forEach(id => $(id).addEventListener("change", () => { const sm = S.settings.smoke; if (!sm) return; sm.packs = Math.max(0, +$("smPacks").value || 0); sm.price = Math.max(0, +$("smPrice").value || 0); sm.cur = $("smCur").value.trim() || sm.cur; save(); }));
 $("sName").addEventListener("input", () => { S.settings.name = $("sName").value.trim(); save(); });
-$("habitForm").onsubmit = e => { e.preventDefault(); const v = $("habitIn").value.trim(); if (!v) return; habits().push({ id: uid(), name: v }); $("habitIn").value = ""; save(); renderSettings(); };
+function retire(h) { const k = key(today); if (h.since === k) S.settings.habits = S.settings.habits.filter(y => y.id !== h.id); else h.until = k; }
+$("habitForm").onsubmit = e => { e.preventDefault(); const v = $("habitIn").value.trim(); if (!v) return; S.settings.habits.push({ id: uid(), name: v, since: key(today) }); $("habitIn").value = ""; save(); renderSettings(); };
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const PL = (window.Capacitor && window.Capacitor.Plugins) || {};
 $("exportBtn").onclick = async () => {
   saveNow(); const json = JSON.stringify(S, null, 1); const name = "hedef-takvimi-" + key(today) + ".json";
+  if (NATIVE && PL.Filesystem && PL.Share) { try { const w = await PL.Filesystem.writeFile({ path: name, data: json, directory: "CACHE", encoding: "utf8" }); await PL.Share.share({ title: name, url: w.uri, dialogTitle: t("exportBtn") }); } catch (e) {} return; }
   const file = new File([json], name, { type: "application/json" });
   try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -392,7 +412,12 @@ function wizard(redo) {
         const habitsF = P.habits.filter(h => h.name.trim()); const routineF = P.routine.filter(r => r.t.trim());
         if (!redo) S = fresh(lang, A.name);
         S.settings.lang = lang; S.settings.name = A.name; S.settings.answers = A;
-        if (habitsF.length) S.settings.habits = habitsF;
+        if (habitsF.length) {
+          if (!redo) S.settings.habits = habitsF;
+          else { const k = key(today), act = habits(), used = new Set();
+            habitsF.forEach(n => { const m = act.find(o => !used.has(o.id) && o.name.trim() === n.name.trim()); if (m) { used.add(m.id); if (n.kind) m.kind = n.kind; } else { n.since = k; S.settings.habits.push(n); } });
+            act.forEach(o => { if (!used.has(o.id)) retire(o); }); }
+        }
         S.settings.routine = routineF; S.settings.smoke = P.smoke; S.settings.invest = P.invest;
         const m = mkey(today); if (P.goals.trim()) S.months[m] = Object.assign({}, S.months[m] || {}, { goals: P.goals });
         const td = S.days[key(today)]; if (td) td.seeded = false;
@@ -414,5 +439,6 @@ function wizard(redo) {
 // ---------- boot ----------
 if (load()) { applyLang(S.settings.lang); const h = (location.hash || "").slice(1); if (VIEWS[h]) view = h; renderAll(); }
 else showWelcome();
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if (!NATIVE && "serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if (NATIVE && PL.App) PL.App.addListener("backButton", () => { if (!$("welcome").hidden || view === "today") PL.App.exitApp(); else show("today"); });
 })();
