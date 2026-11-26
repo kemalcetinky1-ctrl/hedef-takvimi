@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hedef Takvimi</string>
+    <string name="title_activity_main">Hedef Takvimi</string>
+    <string name="package_name">com.kemalcetinkaya.hedeftakvimi</string>
+    <string name="custom_url_scheme">com.kemalcetinkaya.hedeftakvimi</string>
+</resources>

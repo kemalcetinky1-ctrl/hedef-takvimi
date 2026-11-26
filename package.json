@@ -1,0 +1,22 @@
+{
+  "name": "hedef-takvimi-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.3",
+    "@fontsource/caveat": "^5.0.18",
+    "@fontsource/inter": "^5.0.18",
+    "@fontsource/space-grotesk": "^5.0.18"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.3",
+    "@capacitor/core": "^8.6.3"
+  }
+}

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080C18">
+<meta name="description" content="Hedeflerini yaz, gününü planla, yaptıkça çarpı at.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hedef Takvimi">
+<title>Hedef Takvimi</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas class="sky" id="sky" aria-hidden="true"></canvas>
+
+<div class="welcome" id="welcome" hidden>
+  <div class="wcard" id="wcard"></div>
+</div>
+
+<main class="app" id="app">
+  <!-- TODAY -->
+  <section class="view" id="v-today" aria-labelledby="tToday">
+    <header class="top">
+      <div class="hello" id="hello"></div>
+      <div class="dnav">
+        <button class="ic" id="dPrev" data-ta="prevDay">‹</button>
+        <h1 id="tToday"></h1>
+        <button class="ic" id="dNext" data-ta="nextDay">›</button>
+      </div>
+      <button class="chip" id="dToday" data-t="today" hidden></button>
+    </header>
+    <div class="hero" id="hero">
+      <div class="big-cell" id="bigCell"><span class="f"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="trk"/><circle cx="50" cy="50" r="44" class="arc" id="arc"/></svg><b id="bigPct">0%</b></span><span class="b"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9 L31 31 M31 9 L9 31"/></svg></span></div>
+      <p class="hstat" id="hStat"></p>
+      <p class="badge" id="badge" hidden></p>
+    </div>
+    <div class="stats">
+      <div class="stat gold"><b id="sStreak">0</b><span data-t="streak"></span></div>
+      <div class="stat"><b id="sBest">0</b><span data-t="best"></span></div>
+      <div class="stat"><b id="sMonth">–</b><span data-t="thisMonth"></span></div>
+    </div>
+    <div class="card">
+      <h2 data-t="habits"></h2>
+      <div class="checks" id="hChecks"></div>
+    </div>
+    <div class="card">
+      <h2 data-t="plan"></h2>
+      <div class="checks" id="tChecks"></div>
+      <p class="hint" id="planEmpty" data-t="planEmpty"></p>
+      <form class="row" id="taskForm"><input type="text" id="taskIn" data-tp="addTask" maxlength="140"><button class="btn" data-t="add"></button></form>
+    </div>
+    <div class="card">
+      <div class="times">
+        <label class="fld"><span data-t="wake"></span><input type="time" id="wake"></label>
+        <label class="fld"><span data-t="sleep"></span><input type="time" id="sleep"></label>
+      </div>
+      <label class="fld"><span data-t="note"></span><textarea id="note" rows="3" data-tp="notePh"></textarea></label>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="view" id="v-cal" hidden>
+    <header class="top"><div class="brand"><span data-t="appName"></span></div><div class="motto" data-t="motto"></div></header>
+    <div class="years" id="years"></div>
+    <div class="stage" id="stage">
+      <button class="arrow l" id="mPrev" data-ta="prevMonth">‹</button>
+      <div class="ring" id="ring"></div>
+      <button class="arrow r" id="mNext" data-ta="nextMonth">›</button>
+    </div>
+    <div class="card">
+      <div class="bh"><h2 id="mTitle"></h2><p id="mInfo"></p></div>
+      <div class="prog"><i id="mBar"></i></div>
+      <div class="dow" id="dow"></div>
+      <div class="days" id="days"></div>
+      <div class="legend"><span><i class="lg-f"></i><b data-t="legendFull"></b></span><span><i class="lg-p"></i><b data-t="legendPart"></b></span><span><i class="lg-t"></i><b data-t="legendToday"></b></span></div>
+      <p class="hint c" data-t="tapHint"></p>
+    </div>
+    <div class="card">
+      <h2 data-t="habits"></h2>
+      <div class="hb" id="hbars"></div>
+    </div>
+    <div class="card">
+      <h2 data-t="yearView"></h2>
+      <div class="heat"><div class="heat-in" id="heat"></div></div>
+    </div>
+  </section>
+
+  <!-- GOALS -->
+  <section class="view" id="v-goals" hidden>
+    <header class="top">
+      <div class="dnav">
+        <button class="ic" id="gPrev" data-ta="prevMonth">‹</button>
+        <h1 id="gTitle"></h1>
+        <button class="ic" id="gNext" data-ta="nextMonth">›</button>
+      </div>
+    </header>
+    <div class="card">
+      <label class="fld"><em id="gLabel"></em><textarea id="goals" rows="8" data-tp="goalsPh"></textarea></label>
+      <label class="fld"><span class="lbl"><em>1.</em> <span data-t="good"></span></span><textarea id="good" rows="3"></textarea></label>
+      <label class="fld"><span class="lbl"><em>2.</em> <span data-t="bad"></span></span><textarea id="bad" rows="3"></textarea></label>
+      <label class="fld"><span class="lbl"><em>3.</em> <span data-t="learned"></span></span><textarea id="learned" rows="3"></textarea></label>
+      <p class="hint" id="gSaved"></p>
+    </div>
+    <div class="card">
+      <h2 id="yTitle"></h2>
+      <label class="fld"><span data-t="yGood"></span><textarea id="ygood" rows="3"></textarea></label>
+      <label class="fld"><span data-t="yBad"></span><textarea id="ybad" rows="3"></textarea></label>
+      <label class="fld"><span data-t="yLearned"></span><textarea id="ylearned" rows="3"></textarea></label>
+      <label class="fld"><span data-t="yNext"></span><textarea id="ynext" rows="4"></textarea></label>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="v-set" hidden>
+    <header class="top"><h1 data-t="tabSettings"></h1></header>
+    <div class="card">
+      <h2 data-t="language"></h2>
+      <div class="langs" id="sLangs" role="radiogroup"></div>
+      <label class="fld"><span data-t="name"></span><input type="text" id="sName" data-tp="namePh"></label>
+    </div>
+    <div class="card">
+      <h2 data-t="myHabits"></h2>
+      <p class="hint" data-t="habitsHint"></p>
+      <div class="hed" id="hed"></div>
+      <form class="row" id="habitForm"><input type="text" id="habitIn" data-tp="newHabit" maxlength="60"><button class="btn" data-t="add"></button></form>
+    </div>
+    <div class="card">
+      <h2 data-t="routine"></h2>
+      <p class="hint" data-t="routineHint"></p>
+      <div class="hed" id="rEd"></div>
+      <form class="row3" id="routineForm"><input type="time" id="rTime" aria-label="time"><input type="text" id="rIn" data-tp="newRoutine" maxlength="100"><button class="btn" data-t="add"></button></form>
+      <button class="btn" id="redoBtn" data-t="redo"></button>
+      <p class="hint" data-t="redoHint"></p>
+    </div>
+    <div class="card">
+      <h2 data-t="backup"></h2>
+      <p class="hint" data-t="privacy"></p>
+      <div class="row2">
+        <button class="btn" id="exportBtn" data-t="exportBtn"></button>
+        <label class="btn" for="importIn" data-t="importBtn"></label>
+        <input type="file" id="importIn" accept="application/json,.json" hidden>
+      </div>
+      <p class="hint" id="bMsg" role="status"></p>
+      <button class="btn danger" id="resetBtn" data-t="reset"></button>
+      <a class="link" href="privacy.html" id="privLink" data-t="privacyLink"></a>
+      <p class="hint c">v1.1.0</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" id="tabs">
+  <button data-v="today"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg><span data-t="tabToday"></span></button>
+  <button data-v="cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span data-t="tabCalendar"></span></button>
+  <button data-v="goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><span data-t="tabGoals"></span></button>
+  <button data-v="set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span data-t="tabSettings"></span></button>
+</nav>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="i18n.js"></script>
+<script src="plan.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
